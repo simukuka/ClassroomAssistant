@@ -1,62 +1,113 @@
 import { useState } from "react";
-import { Container, Row, Col, Button, Nav, Card } from "react-bootstrap";
+import { Container, Row, Col, Navbar, Nav, Card, Button } from "react-bootstrap";
 import AssignmentTracker from "./components/AssignmentTracker";
 import StudyPlanner from "./components/StudyPlanner";
+import "./App.css"; // Make sure this imports the CSS below
+
+// Temporary placeholder
+function LectureSummarizer() {
+  return <div>Lecture Summarizer Coming Soon...</div>;
+}
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState("assignments");
+  const [activeTab, setActiveTab] = useState(null); // null = dashboard
+
+  const today = new Date().toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "short",
+    day: "numeric",
+  });
+
+  const modules = [
+    {
+      key: "assignments",
+      title: "Assignment Tracker",
+      icon: "📘",
+      description: "Keep track of your assignments and deadlines.",
+      component: <AssignmentTracker />,
+    },
+    {
+      key: "planner",
+      title: "Study Planner",
+      icon: "📅",
+      description: "Organize your study schedule efficiently.",
+      component: <StudyPlanner />,
+    },
+    {
+      key: "summarizer",
+      title: "Lecture Summarizer",
+      icon: "📝",
+      description: "Summarize and digest complex lecture material.",
+      component: <LectureSummarizer />,
+    },
+  ];
 
   return (
-    <Container fluid className="bg-light vh-100">
-      <Row className="h-100">
-        {/* Sidebar */}
-        <Col md={3} className="bg-white shadow p-4 d-flex flex-column">
-          <h2 className="text-primary mb-4 text-center">Classroom Assistant</h2>
-          <Nav className="flex-column">
+    <Container fluid className="vh-100 bg-light p-0">
+      {/* Top Navbar */}
+      <Navbar bg="white" expand="lg" className="shadow-sm px-4">
+        <Navbar.Brand href="#">Classroom Assistant</Navbar.Brand>
+        <Nav className="ms-auto">
+          {modules.map((mod) => (
             <Nav.Link
-              active={activeTab === "assignments"}
-              onClick={() => setActiveTab("assignments")}
+              key={mod.key}
+              active={activeTab === mod.key}
+              onClick={() => setActiveTab(mod.key)}
+              style={{
+                borderBottom: activeTab === mod.key ? "2px solid #0d6efd" : "none",
+                transition: "border-bottom 0.3s",
+              }}
             >
-              📘 Assignment Tracker
+              {mod.title}
             </Nav.Link>
-            <Nav.Link
-              active={activeTab === "planner"}
-              onClick={() => setActiveTab("planner")}
-            >
-              📅 Study Planner
-            </Nav.Link>
-            <Nav.Link
-              active={activeTab === "summarizer"}
-              onClick={() => setActiveTab("summarizer")}
-            >
-              📝 Lecture Summarizer
-            </Nav.Link>
-          </Nav>
-        </Col>
+          ))}
+        </Nav>
+      </Navbar>
 
-        {/* Main Content */}
-        <Col md={9} className="p-4 overflow-auto">
-          {activeTab === "assignments" && <AssignmentTracker />}
-          {activeTab === "planner" && <StudyPlanner />}
-          {activeTab === "planner" && (
-            <Card>
-              <Card.Body>
-                <Card.Title>Study Planner</Card.Title>
-                <Card.Text>Organize your study schedule visually and easily.</Card.Text>
-              </Card.Body>
-            </Card>
-          )}
+      <Container className="pt-4">
+        {/* Dashboard */}
+        {!activeTab && (
+          <>
+            <Row className="mb-4">
+              <Col>
+                <h2>Dashboard</h2>
+                <small className="text-muted">{today}</small>
+              </Col>
+            </Row>
 
-          {activeTab === "summarizer" && (
-            <Card>
-              <Card.Body>
-                <Card.Title>Lecture Summarizer</Card.Title>
-                <Card.Text>Summarize and digest complex lecture material.</Card.Text>
-              </Card.Body>
-            </Card>
-          )}
-        </Col>
-      </Row>
+            <Row className="g-4">
+              {modules.map((mod) => (
+                <Col md={4} key={mod.key}>
+                  <Card
+                    className={`shadow-sm h-100 text-center p-3 hover-shadow module-card ${mod.key}`}
+                    onClick={() => setActiveTab(mod.key)}
+                    style={{ cursor: "pointer" }}
+                  >
+                    <div style={{ fontSize: "2rem" }}>{mod.icon}</div>
+                    <Card.Body>
+                      <Card.Title>{mod.title}</Card.Title>
+                      <Card.Text>{mod.description}</Card.Text>
+                      <Button variant="primary" onClick={() => setActiveTab(mod.key)}>
+                        Go
+                      </Button>
+                    </Card.Body>
+                  </Card>
+                </Col>
+              ))}
+            </Row>
+          </>
+        )}
+
+        {/* Active Module */}
+        {activeTab && (
+          <div className="mt-4 fade show">
+            <Button variant="secondary" onClick={() => setActiveTab(null)} className="mb-3">
+              ← Back to Dashboard
+            </Button>
+            {modules.find((mod) => mod.key === activeTab)?.component}
+          </div>
+        )}
+      </Container>
     </Container>
   );
 }
