@@ -1,8 +1,9 @@
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Navbar, Nav, Card, Button } from "react-bootstrap";
 import AssignmentTracker from "./components/AssignmentTracker";
 import StudyPlanner from "./components/StudyPlanner";
-import "./App.css"; // Make sure this imports the CSS below
+import Login from "./Login";
+import "./App.css";
 
 // Temporary placeholder
 function LectureSummarizer() {
@@ -10,7 +11,22 @@ function LectureSummarizer() {
 }
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState(null); // null = dashboard
+  const [activeTab, setActiveTab] = useState(null);
+  const [user, setUser] = useState(null);
+
+  // load saved username on mount
+  useEffect(() => {
+    const savedUser = localStorage.getItem("username");
+    if (savedUser) setUser(savedUser);
+  }, []);
+
+  // handle login + logout
+  const handleLogin = (username) => setUser(username);
+  const handleLogout = () => {
+    setUser(null);
+    setActiveTab(null);
+    // optionally keep username in localStorage to prefill login
+  };
 
   const today = new Date().toLocaleDateString("en-US", {
     weekday: "long",
@@ -24,14 +40,14 @@ export default function App() {
       title: "Assignment Tracker",
       icon: "📘",
       description: "Keep track of your assignments and deadlines.",
-      component: <AssignmentTracker />,
+      component: <AssignmentTracker username={user} />,
     },
     {
       key: "planner",
       title: "Study Planner",
       icon: "📅",
       description: "Organize your study schedule efficiently.",
-      component: <StudyPlanner />,
+      component: <StudyPlanner username={user} />,
     },
     {
       key: "summarizer",
@@ -42,25 +58,19 @@ export default function App() {
     },
   ];
 
+  if (!user) {
+    return <Login onLogin={handleLogin} />;
+  }
+
   return (
     <Container fluid className="vh-100 bg-light p-0">
-      {/* Top Navbar */}
       <Navbar bg="white" expand="lg" className="shadow-sm px-4">
         <Navbar.Brand href="#">Classroom Assistant</Navbar.Brand>
-        <Nav className="ms-auto">
-          {modules.map((mod) => (
-            <Nav.Link
-              key={mod.key}
-              active={activeTab === mod.key}
-              onClick={() => setActiveTab(mod.key)}
-              style={{
-                borderBottom: activeTab === mod.key ? "2px solid #0d6efd" : "none",
-                transition: "border-bottom 0.3s",
-              }}
-            >
-              {mod.title}
-            </Nav.Link>
-          ))}
+        <Nav className="ms-auto align-items-center">
+          <span className="me-3 text-muted">{user}</span>
+          <Button variant="secondary" size="sm" onClick={handleLogout}>
+            Logout
+          </Button>
         </Nav>
       </Navbar>
 
@@ -98,15 +108,21 @@ export default function App() {
           </>
         )}
 
-        {/* Active Module */}
-        {activeTab && (
-          <div className="mt-4 fade show">
-            <Button variant="secondary" onClick={() => setActiveTab(null)} className="mb-3">
-              ← Back to Dashboard
-            </Button>
-            {modules.find((mod) => mod.key === activeTab)?.component}
+        {/* Modules (keep mounted for state persistence) */}
+        {modules.map((mod) => (
+          <div
+            key={mod.key}
+            className="mt-4 fade show"
+            style={{ display: activeTab === mod.key ? "block" : "none" }}
+          >
+            {activeTab === mod.key && (
+              <Button variant="secondary" onClick={() => setActiveTab(null)} className="mb-3">
+                ← Back to Dashboard
+              </Button>
+            )}
+            {mod.component}
           </div>
-        )}
+        ))}
       </Container>
     </Container>
   );

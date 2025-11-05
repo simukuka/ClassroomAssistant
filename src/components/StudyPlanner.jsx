@@ -1,44 +1,42 @@
 import { useState, useEffect } from "react";
 import { Card, Form, Button, Row, Col, Badge, ProgressBar } from "react-bootstrap";
 
-export default function StudyPlanner() {
+export default function StudyPlanner({ username }) {
   const [tasks, setTasks] = useState([]);
   const [title, setTitle] = useState("");
   const [date, setDate] = useState("");
   const [subject, setSubject] = useState("");
 
-  // Load tasks from localStorage
+  // Load tasks for this user
   useEffect(() => {
-    const saved = localStorage.getItem("studyTasks");
+    if (!username) return;
+    const saved = localStorage.getItem(`${username}-tasks`);
     if (saved) setTasks(JSON.parse(saved));
-  }, []);
+  }, [username]);
 
+  // Save tasks whenever they change
   useEffect(() => {
-    localStorage.setItem("studyTasks", JSON.stringify(tasks));
-  }, [tasks]);
+    if (!username) return;
+    localStorage.setItem(`${username}-tasks`, JSON.stringify(tasks));
+  }, [tasks, username]);
 
   const addTask = () => {
     if (!title || !date) return;
-    setTasks([
-      ...tasks,
-      { id: Date.now(), title, date, subject, completed: false },
-    ]);
+    const newTask = { id: Date.now(), title, date, subject, completed: false };
+    setTasks([...tasks, newTask]);
     setTitle("");
     setDate("");
     setSubject("");
   };
 
   const toggleComplete = (id) => {
-    setTasks(
-      tasks.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t))
-    );
+    setTasks(tasks.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t)));
   };
 
   const deleteTask = (id) => {
     setTasks(tasks.filter((t) => t.id !== id));
   };
 
-  // Group tasks by day
   const today = new Date().toISOString().split("T")[0];
   const tomorrow = new Date(Date.now() + 86400000).toISOString().split("T")[0];
 
@@ -48,12 +46,10 @@ export default function StudyPlanner() {
     Upcoming: tasks.filter((t) => t.date > tomorrow),
   };
 
-  // Calculate completion %
   const total = tasks.length;
   const completed = tasks.filter((t) => t.completed).length;
   const progress = total === 0 ? 0 : Math.round((completed / total) * 100);
 
-  // Colors for subjects
   const subjectColors = ["primary", "success", "info", "warning", "danger"];
 
   return (
@@ -110,27 +106,17 @@ export default function StudyPlanner() {
           <Row className="g-3">
             {items.map((t) => (
               <Col md={6} key={t.id}>
-                <Card
-                  className={`shadow-sm ${
-                    t.completed ? "border-success" : ""
-                  }`}
-                >
+                <Card className={`shadow-sm ${t.completed ? "border-success" : ""}`}>
                   <Card.Body className="d-flex justify-content-between align-items-center">
                     <div>
-                      <Card.Title
-                        className={t.completed ? "text-decoration-line-through" : ""}
-                      >
+                      <Card.Title className={t.completed ? "text-decoration-line-through" : ""}>
                         {t.title}
                       </Card.Title>
                       <Card.Text className="mb-1">
                         Date: <strong>{t.date}</strong>{" "}
                         {t.subject && (
                           <Badge
-                            bg={
-                              subjectColors[
-                                t.subject.length % subjectColors.length
-                              ]
-                            }
+                            bg={subjectColors[t.subject.length % subjectColors.length]}
                           >
                             {t.subject}
                           </Badge>

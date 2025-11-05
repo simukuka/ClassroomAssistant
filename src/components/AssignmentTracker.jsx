@@ -1,29 +1,29 @@
 import { useState, useEffect } from "react";
 import { Card, Form, Button, Row, Col, Badge } from "react-bootstrap";
 
-export default function AssignmentTracker() {
+export default function AssignmentTracker({ username }) {
   const [assignments, setAssignments] = useState([]);
   const [title, setTitle] = useState("");
   const [dueDate, setDueDate] = useState("");
 
-  // Load saved assignments from localStorage
+  // Load saved assignments for this user
   useEffect(() => {
-    const saved = localStorage.getItem("assignments");
+    if (!username) return;
+    const saved = localStorage.getItem(`${username}-assignments`);
     if (saved) setAssignments(JSON.parse(saved));
-  }, []);
+  }, [username]);
 
-  // Save assignments to localStorage
+  // Save assignments whenever they change
   useEffect(() => {
-    localStorage.setItem("assignments", JSON.stringify(assignments));
-  }, [assignments]);
+    if (!username) return;
+    localStorage.setItem(`${username}-assignments`, JSON.stringify(assignments));
+  }, [assignments, username]);
 
   // Add new assignment
   const addAssignment = () => {
     if (!title || !dueDate) return;
-    setAssignments([
-      ...assignments,
-      { id: Date.now(), title, dueDate, completed: false },
-    ]);
+    const newAssignment = { id: Date.now(), title, dueDate, completed: false };
+    setAssignments([...assignments, newAssignment]);
     setTitle("");
     setDueDate("");
   };
@@ -82,9 +82,7 @@ export default function AssignmentTracker() {
         {assignments.map((a) => (
           <Col md={6} key={a.id}>
             <Card
-              className={`shadow-sm ${
-                a.completed ? "border-success" : ""
-              }`}
+              className={`shadow-sm ${a.completed ? "border-success" : ""}`}
             >
               <Card.Body className="d-flex justify-content-between align-items-center">
                 <div>
