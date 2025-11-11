@@ -1,10 +1,4 @@
-// import { HfInference } from "@huggingface/inference";
-// import dotenv from 'dotenv';
 import axios from "axios";
-// dotenv.config();
-// const hf = new HfInference(process.env.HUGGINGFACE_API_KEY);
-
-
 
 export const generateSummary = async (notes) => {
   try {
